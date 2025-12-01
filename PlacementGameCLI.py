@@ -1,29 +1,133 @@
-import sys
+import random
 import os
-import time
+import AlgorithmX as X
 
-# --- KONFIGURATION ---
-BOARD_W = 11
-BOARD_H = 10
-
-# Die 10 Rechtecke (Breite, Höhe, Farbe)
-RECTANGLES_CONFIG = [
-    (3, 2, "#E74C3C"),  # Rot
-    (3, 2, "#3498DB"),  # Blau
-    (6, 3, "#2ECC71"),  # Grün
-    (2, 4, "#F1C40F"),  # Gelb
-    (3, 3, "#E67E22"),  # Orange
-    (4, 2, "#1ABC9C"),  # Türkis
-    (3, 5, "#34495E"),  # Dunkelgrau
-    (4, 3, "#8E44AD"),  # Lila
-    (4, 5, "#9B59B6"),  # Magenta
-    (1, 5, "#95A5A6"),  # Grau
+# --- LEVELS CONFIGURATION ---
+LEVELS = [
+    {
+        "name": "Small",
+        "width": 5,
+        "height": 5,
+        "pieces": [
+            (3, 3, "#E74C3C"),
+            (2, 3, "#3498DB"),
+            (3, 2, "#2ECC71"),
+            (2, 2, "#F1C40F"),
+        ]
+    },
+    {
+        "name": "Medium",
+        "width": 8,
+        "height": 8,
+        "pieces": [
+            (4, 4, "#E74C3C"),
+            (4, 4, "#3498DB"),
+            (4, 2, "#2ECC71"),
+            (4, 2, "#F1C40F"),
+            (2, 2, "#E67E22"),
+            (2, 2, "#1ABC9C"),
+            (2, 4, "#34495E"),
+        ]
+    },
+    {
+        "name": "Standard",
+        "width": 11,
+        "height": 10,
+        "pieces": [
+            (3, 2, "#E74C3C"),
+            (3, 2, "#3498DB"),
+            (6, 3, "#2ECC71"),
+            (2, 4, "#F1C40F"),
+            (3, 3, "#E67E22"),
+            (4, 2, "#1ABC9C"),
+            (3, 5, "#34495E"),
+            (4, 3, "#8E44AD"),
+            (1, 3, "#2980B9"),
+            (4, 5, "#9B59B6"),
+            (1, 5, "#95A5A6"),
+        ]
+    },
+    {
+        "name": "Big",
+        "width": 20,
+        "height": 20,
+        "pieces": [
+            (10, 10, "#E74C3C"),
+            (8, 8, "#8E44AD"),
+            (5, 8, "#3498DB"),
+            (6, 6, "#1ABC9C"),
+            (4, 9, "#2ECC71"),
+            (5, 6, "#F1C40F"),
+            (4, 6, "#E67E22"),
+            (3, 7, "#D35400"),
+            (3, 5, "#C0392B"),
+            (2, 6, "#2980B9"),
+            (2, 5, "#27AE60"),
+            (2, 4, "#7F8C8D"),
+            (2, 2, "#34495E")
+        ]
+    },
+    {
+        "name": "Insanity",
+        "width": 40,
+        "height": 20,
+        "pieces": [
+            (20, 9, "#C0392B"),
+            (20, 7, "#E74C3C"),
+            (10, 9, "#E67E22"),
+            (10, 7, "#F39C12"),
+            (10, 5, "#F1C40F"),
+            (7, 5, "#27AE60"),
+            (5, 5, "#16A085"),
+            (6, 4, "#1ABC9C"),
+            (4, 4, "#3498DB"),
+            (5, 3, "#2980B9"),
+            (3, 3, "#9B59B6"),
+            (4, 2, "#8E44AD"),
+            (2, 2, "#34495E"),
+            (3, 2, "#2C3E50"),
+            (1, 2, "#95A5A6"),
+            (3, 1, "#7F8C8D"),
+            (2, 1, "#C0392B"),
+            (2, 1, "#E74C3C"),
+            (1, 1, "#D35400"),
+            (9, 5, "#E67E22"),
+            (8, 4, "#F39C12"),
+            (7, 4, "#F1C40F"),
+            (6, 1, "#2ECC71"),
+            (4, 1, "#16A085"),
+            (3, 1, "#27AE60")
+        ]
+    }
 ]
+
+def get_piece_volume_of_level(pieces):
+    pieces = [
+        (10, 10, "#E74C3C"),
+        (8, 8, "#8E44AD"),
+        (5, 8, "#3498DB"),
+        (6, 6, "#1ABC9C"),
+        (4, 9, "#2ECC71"),
+        (5, 6, "#F1C40F"),
+        (4, 6, "#E67E22"),
+        (3, 7, "#D35400"),
+        (3, 5, "#C0392B"),
+        (2, 6, "#2980B9"),
+        (2, 5, "#27AE60"),
+        (2, 4, "#7F8C8D"),
+        (2, 2, "#34495E")
+    ]
+    volume = 0
+    for w, h, _ in pieces:
+        volume += w * h
+    return f"Total volume of pieces: {volume}"
+
 
 def get_ansi_color(hex_color):
     hex_color = hex_color.lstrip('#')
-    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    r, g, b = tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
     return f"\033[38;2;{r};{g};{b}m"
+
 
 def clear_screen():
     if os.name == 'nt':
@@ -33,127 +137,6 @@ def clear_screen():
     else:
         print("\n" * 50)
 
-class AlgorithmX:
-    def __init__(self, game):
-        self.game = game
-        self.steps = 0
-        self.history = []
-
-    def solve(self):
-        self.steps = 0
-        self.history = []
-
-        print("Starting Algorithm X Search...")
-        if self._search(set(range(len(self.game.pieces)))):
-            print(f"\nSolution found in {self.steps} steps!")
-        else:
-            print(f"\nNo solution found after {self.steps} steps.")
-
-    def render(self):
-        clear_screen()
-        self.game.print_board()
-        self.game.list_pieces()
-        print("\n--- History (Last 30 Steps) ---")
-        for msg in self.history[-30:]:
-            print(msg)
-        print("--------------------------------------")
-        time.sleep(self.game.solve_delay)
-
-    def _search(self, remaining_piece_ids):
-        # Base case: all pieces placed
-        if not remaining_piece_ids:
-            return True
-
-        self.steps += 1
-
-        # Determine occupied cells for collision checking
-        occupied = set()
-        for p in self.game.pieces:
-            if p.placed:
-                for r in range(p.y, p.y + p.h):
-                    for c in range(p.x, p.x + p.w):
-                        occupied.add((c, r))
-
-        # Find the piece with the fewest valid moves (Algorithm X Heuristic)
-        best_pid = -1
-        min_moves = []
-        min_count = float('inf')
-
-        # Analyze all remaining pieces
-        for pid in remaining_piece_ids:
-            p = self.game.pieces[pid]
-            self.game.pieces[pid].possible_placements = 0
-            valid_moves = []
-
-            # Try all orientations: (w, h) and (h, w) if different
-            orientations = [(p.w, p.h)]
-            if p.w != p.h:
-                orientations.append((p.h, p.w))
-
-            for w, h in orientations:
-                # Try all board positions
-                for y in range(BOARD_H - h + 1):
-                    for x in range(BOARD_W - w + 1):
-                        # Check collision
-                        collision = False
-                        for r in range(y, y + h):
-                            if collision: break
-                            for c in range(x, x + w):
-                                if (c, r) in occupied:
-                                    collision = True
-                                    break
-                        if not collision:
-                            valid_moves.append((pid, x, y, w, h))
-                            self.game.pieces[pid].possible_placements += 1
-
-            # Update best candidate
-            if len(valid_moves) < min_count:
-                min_count = len(valid_moves)
-                best_pid = pid
-                min_moves = valid_moves
-                # Optimization: fail fast if a piece has 0 moves
-                if min_count == 0:
-                    break
-        
-        # Log progress / Intermediate results
-        indent = "  " * (len(self.game.pieces) - len(remaining_piece_ids))
-        self.history.append(f"{indent}Step {self.steps}: Best candidate Piece {best_pid} has {min_count} moves")
-
-        if min_count == 0:
-            return False # Dead end
-
-        # Try each move for the selected piece
-        for move in min_moves:
-            pid, x, y, w, h = move
-            
-            p = self.game.pieces[pid]
-            original_w, original_h = p.w, p.h
-            
-            # Place piece
-            p.x = x
-            p.y = y
-            p.w = w
-            p.h = h
-            p.placed = True
-            
-            self.history.append(f"{indent} -> Placing Piece {pid} at ({x}, {y})")
-            self.render()
-            
-            # Recurse
-            if self._search(remaining_piece_ids - {pid}):
-                return True
-            
-            # Backtrack
-            p.placed = False
-            p.x = -1
-            p.y = -1
-            p.w = original_w
-            p.h = original_h
-
-            self.history.append(f"{indent} <- Backtracking Piece {pid}")
-            self.render()
-        
-        return False
 
 class Piece:
     def __init__(self, pid, w, h, color):
@@ -166,31 +149,38 @@ class Piece:
         self.placed = False
         self.possible_placements = -1
 
+
 class PlacementGame:
-    def __init__(self):
-        self.solve_delay = 1
+    def __init__(self, level_config):
+        self.solve_delay = 0
+        self.level_name = level_config["name"]
+        self.board_w = level_config["width"]
+        self.board_h = level_config["height"]
+        self.initial_pieces_config = level_config["pieces"]
+
         self.pieces = []
-        for i, (w, h, color) in enumerate(RECTANGLES_CONFIG):
+        for i, (w, h, color) in enumerate(self.initial_pieces_config):
             self.pieces.append(Piece(i, w, h, color))
 
     def print(self):
         clear_screen()
+        print(f"Level: {self.level_name} ({self.board_w}x{self.board_h})")
         self.print_board()
         self.list_pieces()
 
     def print_board(self):
-        grid = [[' .' for _ in range(BOARD_W)] for _ in range(BOARD_H)]
+        grid = [[' .' for _ in range(self.board_w)] for _ in range(self.board_h)]
         for p in self.pieces:
             if p.placed:
                 color_code = get_ansi_color(p.color)
                 reset_code = "\033[0m"
                 for r in range(p.y, p.y + p.h):
                     for c in range(p.x, p.x + p.w):
-                        if 0 <= r < BOARD_H and 0 <= c < BOARD_W:
+                        if 0 <= r < self.board_h and 0 <= c < self.board_w:
                             grid[r][c] = f"{color_code}{p.id:>2}{reset_code}"
-    
-        print("\n    " + " ".join(f"{i:>2}" for i in range(BOARD_W)))
-        for r in range(BOARD_H):
+
+        print("\n    " + " ".join(f"{i:>2}" for i in range(self.board_w)))
+        for r in range(self.board_h):
             print(f"{r:>2}  " + " ".join(grid[r]))
 
     def list_pieces(self):
@@ -199,8 +189,8 @@ class PlacementGame:
             color_code = get_ansi_color(p.color)
             reset_code = "\033[0m"
             state = f"Placed at ({p.x}, {p.y})" if p.placed else "Not placed"
-            
-            info = f"ID {p.id}: {color_code}{p.w}x{p.h}{reset_code} | {state}"
+
+            info = f"ID {p.id:>2}: {color_code}{p.w:>2}x{p.h:<2}{reset_code} | {state}"
             if not p.placed:
                 if p.possible_placements >= 0:
                     info += f" | Possible placements: {p.possible_placements}"
@@ -208,15 +198,15 @@ class PlacementGame:
         print("--------------\n")
 
     def check_collision(self, piece, x, y, w, h):
-        if x < 0 or y < 0 or x + w > BOARD_W or y + h > BOARD_H:
+        if x < 0 or y < 0 or x + w > self.board_w or y + h > self.board_h:
             return True
-        
+
         for p in self.pieces:
             if p.id != piece.id and p.placed:
-                 # Check overlap
-                 if not (x + w <= p.x or x >= p.x + p.w or
-                         y + h <= p.y or y >= p.y + p.h):
-                     return True
+                # Check overlap
+                if not (x + w <= p.x or x >= p.x + p.w or
+                        y + h <= p.y or y >= p.y + p.h):
+                    return True
         return False
 
     def place(self, pid, x, y):
@@ -261,7 +251,7 @@ class PlacementGame:
             self.print()
             print(f"Piece {pid} is placed. Remove it first to rotate.")
             return
-        
+
         p.w, p.h = p.h, p.w
         self.print()
         print(f"Piece {pid} rotated. New size: {p.w}x{p.h}")
@@ -269,24 +259,27 @@ class PlacementGame:
     def check_win(self):
         if all(p.placed for p in self.pieces):
             total_area = sum(p.w * p.h for p in self.pieces)
-            if total_area == BOARD_W * BOARD_H:
+            if total_area == self.board_w * self.board_h:
                 print("\nCONGRATULATIONS! You have filled the board!\n")
+                return True
+        return False
 
     def reset(self):
-        # Reset back to Recktangle Config
-        for p in self.pieces:
-            p.w, p.h = RECTANGLES_CONFIG[p.id][0], RECTANGLES_CONFIG[p.id][1]
-            p.x = -1
-            p.y = -1
-            p.placed = False
-            p.possible_placements = -1
+        self.pieces = []
+        for i, (w, h, color) in enumerate(self.initial_pieces_config):
+            self.pieces.append(Piece(i, w, h, color))
+        self.print()
+
+    def shuffle(self):
+        random.shuffle(self.pieces)
         self.print()
 
     def run(self):
         self.print()
+        print(get_piece_volume_of_level(self.pieces))
         print("Placement Game CLI")
-        print("Commands: place <id> <x> <y>, remove <id>, rotate <id>, solve, quit")
-    
+        print("Commands: place <id> <x> <y>, remove <id>, rotate <id>, shuffle, solve, quit")
+
         while True:
             try:
                 line = input("> ").strip()
@@ -303,8 +296,7 @@ class PlacementGame:
                 elif cmd == "show":
                     self.print_board()
                 elif cmd == "solve":
-                    solver = AlgorithmX(self)
-                    solver.solve()
+                    X.solve(game, self.solve_delay)
                 elif cmd == "rotate":
                     if len(parts) < 2:
                         print("Usage: rotate <id>")
@@ -325,18 +317,38 @@ class PlacementGame:
                     if len(parts) < 2:
                         print(f"Current delay: {self.solve_delay}s. Usage: delay <seconds>")
                         continue
-                    self.solve_delay = float(parts[1])
+                    self.solve_delay = int(parts[1])
                     print(f"Delay set to {self.solve_delay}s")
+                elif cmd == "shuffle":
+                    self.shuffle()
                 elif cmd == "help":
                     self.print()
-                    print("Commands: place <id> <x> <y>, remove <id>, rotate <id>, delay <seconds>, solve, reset, quit")
+                    print(
+                        "Commands: place <id> <x> <y>, remove <id>, rotate <id>, delay <seconds>, shuffle, solve, reset, quit")
                 else:
                     print("Unknown command")
-            except ValueError:
-                print("Invalid number format")
             except Exception as e:
                 print(f"Error: {e}")
 
+
 if __name__ == "__main__":
-    game = PlacementGame()
-    game.run()
+    while True:
+        clear_screen()
+        print("=== PLACEMENT GAME SELECTION ===")
+        for i, level in enumerate(LEVELS):
+            print(f"{i + 1}. {level['name']} ({level['width']}x{level['height']})")
+        print("Q. Quit")
+
+        choice = input("\nSelect Level: ").strip().lower()
+        if choice == 'q':
+            break
+
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(LEVELS):
+                game = PlacementGame(LEVELS[idx])
+                game.run()
+            else:
+                input("Invalid selection! Press Enter...")
+        except ValueError:
+            input("Invalid selection! Press Enter...")
