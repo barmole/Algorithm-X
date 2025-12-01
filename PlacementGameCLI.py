@@ -152,6 +152,7 @@ class Piece:
 
 class PlacementGame:
     def __init__(self, level_config):
+        self.print_enabled = True
         self.solve_delay = 0
         self.level_name = level_config["name"]
         self.board_w = level_config["width"]
@@ -163,6 +164,8 @@ class PlacementGame:
             self.pieces.append(Piece(i, w, h, color))
 
     def print(self):
+        if not self.print_enabled:
+            return
         clear_screen()
         print(f"Level: {self.level_name} ({self.board_w}x{self.board_h})")
         self.print_board()
@@ -262,7 +265,7 @@ class PlacementGame:
             if total_area == self.board_w * self.board_h:
                 print("\nCONGRATULATIONS! You have filled the board!\n")
                 return True
-        return False
+            return False
 
     def reset(self):
         self.pieces = []
@@ -319,6 +322,9 @@ class PlacementGame:
                         continue
                     self.solve_delay = int(parts[1])
                     print(f"Delay set to {self.solve_delay}s")
+                elif cmd == "print":
+                    self.print_enabled = not self.print_enabled
+                    print(f"Printing enabled: {self.print_enabled}")
                 elif cmd == "shuffle":
                     self.shuffle()
                 elif cmd == "help":
