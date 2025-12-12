@@ -1,8 +1,6 @@
 from time import sleep, time
 
 import PlacementGameCLI
-import numpy as np
-from typing import List, Any
 
 class Node:
     def __init__(self, row_id=-1):
@@ -87,6 +85,53 @@ class DancingLinks:
         column.right.left = column
         column.left.right = column
 
+    def print_incidence_matrix(self):
+        # Gather active columns
+        active_cols = []
+        curr = self.head.right
+        while curr != self.head:
+            active_cols.append(curr)
+            curr = curr.right
+
+        if not active_cols:
+            return
+
+        # Gather active rows
+        active_rows = {}
+        col_map = {col: i for i, col in enumerate(active_cols)}
+
+        for col in active_cols:
+            curr = col.down
+            while curr != col:
+                if curr.row_id not in active_rows:
+                    active_rows[curr.row_id] = set()
+                active_rows[curr.row_id].add(col_map[col])
+                curr = curr.down
+
+        # Print
+        col_widths = [len(c.name) for c in active_cols]
+        row_id_width = 4
+
+        # Header
+        header_parts = [f"{'ID':<{row_id_width}}"]
+        for i, c in enumerate(active_cols):
+            header_parts.append(f"{c.name:^{col_widths[i]}}")
+
+        print(" | ".join(header_parts))
+
+        # Rows
+        for r_id in sorted(active_rows.keys()):
+            parts = [f"{r_id:<{row_id_width}}"]
+            row_cols = active_rows[r_id]
+            for i in range(len(active_cols)):
+                w = col_widths[i]
+                if i in row_cols:
+                    parts.append(f"{'1':^{w}}")
+                else:
+                    parts.append(f"{'.':^{w}}")
+            print(" | ".join(parts))
+        print(f"Active Rows: {len(active_rows)} | Active Cols: {len(active_cols)}")
+
     def print_state(self):
         count = 0
         curr = self.head.right
@@ -147,6 +192,15 @@ def build_exact_cover_matrix(game):
     for piece in pieces:
         col_names.append(f"{piece.id}")
 
+    # Eine Spalte pro Feld welches frei bleiben wird, wenn nicht genügend Pieces vorhanden sind
+    total_board_area = width * height
+    total_pieces_area = sum(p.w * p.h for p in pieces)
+    empty_spaces_needed = total_board_area - total_pieces_area
+
+    for empty_id in range(empty_spaces_needed):
+        col_names.append(f"E-{empty_id}")
+
+
     matrix = []     # 0/1 reihen
     actions = []    # (piece_id, x, y, rotated?)
 
@@ -177,11 +231,30 @@ def build_exact_cover_matrix(game):
 
                         matrix.append(row)
                         actions.append((piece.id, x, y, rotate))
+
+    for empty_id in range(empty_spaces_needed):
+        for x in range(width):
+            for y in range(height):
+                row = [0] * len(col_names)
+                row[piece_col_start + len(pieces) + empty_id] = 1
+                idx = col_names.index(f"{x},{y}")
+                if idx is not None:
+                    row[idx] = 1
+                matrix.append(row)
+                actions.append((-1, x, y, False))
     return matrix, col_names, actions
 
 def solve(game: PlacementGameCLI.PlacementGame, delay: int = 0):
     start_time = time()
     matrix, col_names, actions = build_exact_cover_matrix(game)
+
+    widths = [len(c) for c in col_names]
+    idx_len = len(str(len(matrix)))
+    print(" " * idx_len + "  " + "  ".join(col_names))
+    for i, row in enumerate(matrix):
+        print(f"{i:<{idx_len}}  " + "  ".join([f"{val:<{w}}" for val, w in zip(row, widths)]))
+    input()
+
     dl = DancingLinks(matrix, col_names)
 
     solution_found = False
@@ -192,6 +265,7 @@ def solve(game: PlacementGameCLI.PlacementGame, delay: int = 0):
         game.reset()
         for node in solution:
             piece_id, x, y, rotate = actions[node.row_id]
+            if piece_id < 0: continue
 
             piece = game.pieces[piece_id]
 

@@ -24,8 +24,7 @@ LEVELS = [
             (4, 4, "#3498DB"),
             (4, 2, "#2ECC71"),
             (4, 2, "#F1C40F"),
-            (2, 2, "#E67E22"),
-            (2, 2, "#1ABC9C"),
+            (2, 3, "#E67E22"),
             (2, 4, "#34495E"),
         ]
     },
@@ -320,7 +319,7 @@ class PlacementGame:
                     if len(parts) < 2:
                         print(f"Current delay: {self.solve_delay}s. Usage: delay <seconds>")
                         continue
-                    self.solve_delay = int(parts[1])
+                    self.solve_delay = float(parts[1])
                     print(f"Delay set to {self.solve_delay}s")
                 elif cmd == "print":
                     self.print_enabled = not self.print_enabled
