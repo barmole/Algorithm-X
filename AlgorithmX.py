@@ -250,10 +250,13 @@ def solve(game: PlacementGameCLI.PlacementGame, delay: int = 0):
 
     widths = [len(c) for c in col_names]
     idx_len = len(str(len(matrix)))
+    print("\n--------------")
+    print("Inzidenzmatrix")
+    print("--------------\n")
     print(" " * idx_len + "  " + "  ".join(col_names))
     for i, row in enumerate(matrix):
         print(f"{i:<{idx_len}}  " + "  ".join([f"{val:<{w}}" for val, w in zip(row, widths)]))
-    input()
+    input("\nTo continue press ENTER.")
 
     dl = DancingLinks(matrix, col_names)
 

@@ -100,28 +100,6 @@ LEVELS = [
     }
 ]
 
-def get_piece_volume_of_level(pieces):
-    pieces = [
-        (10, 10, "#E74C3C"),
-        (8, 8, "#8E44AD"),
-        (5, 8, "#3498DB"),
-        (6, 6, "#1ABC9C"),
-        (4, 9, "#2ECC71"),
-        (5, 6, "#F1C40F"),
-        (4, 6, "#E67E22"),
-        (3, 7, "#D35400"),
-        (3, 5, "#C0392B"),
-        (2, 6, "#2980B9"),
-        (2, 5, "#27AE60"),
-        (2, 4, "#7F8C8D"),
-        (2, 2, "#34495E")
-    ]
-    volume = 0
-    for w, h, _ in pieces:
-        volume += w * h
-    return f"Total volume of pieces: {volume}"
-
-
 def get_ansi_color(hex_color):
     hex_color = hex_color.lstrip('#')
     r, g, b = tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
@@ -278,7 +256,6 @@ class PlacementGame:
 
     def run(self):
         self.print()
-        print(get_piece_volume_of_level(self.pieces))
         print("Placement Game CLI")
         print("Commands: place <id> <x> <y>, remove <id>, rotate <id>, shuffle, solve, quit")
 
